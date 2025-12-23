@@ -1,0 +1,24 @@
+{
+  "name": "example-sdk-js",
+  "version": "1.0.0",
+  "description": "Comprehensive example demonstrating SendPost JavaScript SDK usage for Email Service Providers",
+  "main": "ESPExample.js",
+  "type": "module",
+  "scripts": {
+    "start": "node ESPExample.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "sendpost",
+    "email",
+    "sdk",
+    "esp",
+    "example"
+  ],
+  "author": "",
+  "license": "Unlicense",
+  "dependencies": {
+    "sendpost-js-sdk": "^1.0.0"
+  }
+}
+
