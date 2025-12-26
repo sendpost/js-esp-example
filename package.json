@@ -18,7 +18,7 @@
   "author": "",
   "license": "Unlicense",
   "dependencies": {
-    "sendpost-js-sdk": "^1.0.0"
+    "sendpost-js-sdk": "^2.0.0"
   }
 }
 
