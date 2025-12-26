@@ -62,6 +62,7 @@ class ESPExample {
         this.createdWebhookId = null;
         this.createdDomainId = null;
         this.createdIPPoolId = null;
+        this.createdIPPoolName = null;
         this.sentMessageId = null;
     }
 
@@ -365,6 +366,12 @@ class ESPExample {
                 'X-Email-Type': 'transactional'
             };
             
+            // Use IP pool if available
+            if (this.createdIPPoolName) {
+                emailMessage.ippool = this.createdIPPoolName;
+                console.log(`  Using IP Pool: ${this.createdIPPoolName}`);
+            }
+            
             console.log('Sending transactional email...');
             console.log(`  From: ${TEST_FROM_EMAIL}`);
             console.log(`  To: ${TEST_TO_EMAIL}`);
@@ -443,6 +450,12 @@ class ESPExample {
                 'X-Email-Type': 'marketing',
                 'X-Campaign-ID': 'campaign-001'
             };
+            
+            // Use IP pool if available
+            if (this.createdIPPoolName) {
+                emailMessage.ippool = this.createdIPPoolName;
+                console.log(`  Using IP Pool: ${this.createdIPPoolName}`);
+            }
             
             console.log('Sending marketing email...');
             console.log(`  From: ${TEST_FROM_EMAIL}`);
@@ -743,12 +756,22 @@ class ESPExample {
             }
             poolRequest.ips = poolIPs;
             
+            // Set warmup interval (required, must be > 0)
+            poolRequest.warmupInterval = 24; // 24 hours
+            
+            // Set overflow strategy (0 = None, 1 = Use overflow pool)
+            poolRequest.overflowStrategy = 0;
+            
             console.log(`Creating IP pool: ${poolRequest.name}`);
             console.log('  Routing Strategy: Round Robin');
             console.log(`  IPs: ${poolIPs.length}`);
+            console.log(`  Warmup Interval: ${poolRequest.warmupInterval} hours`);
             
             const ipPool = await ipPoolsApi.createIPPool(poolRequest);
             this.createdIPPoolId = ipPool.id;
+            if (ipPool.name) {
+                this.createdIPPoolName = ipPool.name;
+            }
             
             console.log('✓ IP pool created successfully!');
             console.log(`  ID: ${this.createdIPPoolId}`);
@@ -850,7 +873,7 @@ class ESPExample {
                     console.log(`    Opens: ${statData.opens || 0}`);
                     console.log(`    Clicks: ${statData.clicks || 0}`);
                     console.log(`    Unsubscribed: ${statData.unsubscribed || 0}`);
-                    console.log(`    Spams: ${statData.spams || 0}`);
+                    console.log(`    Spam: ${statData.spam || 0}`);
                 }
             }
             
@@ -884,24 +907,27 @@ class ESPExample {
         await this.addDomain();
         await this.listDomains();
         
-        // Step 4: Send emails
+        // Step 4: Manage IPs and IP pools (before sending emails)
+        await this.listIPs();
+        await this.createIPPool();
+        await this.listIPPools();
+        
+        // Step 5: Send emails (using the created IP pool)
         await this.sendTransactionalEmail();
         await this.sendMarketingEmail();
-        
-        // Step 5: Retrieve message details
-        await this.getMessageDetails();
         
         // Step 6: Monitor statistics
         await this.getSubAccountStats();
         await this.getAggregateStats();
         
-        // Step 7: Manage IPs and IP pools
-        await this.listIPs();
-        await this.createIPPool();
-        await this.listIPPools();
-        
-        // Step 8: Get account-level overview
+        // Step 7: Get account-level overview
         await this.getAccountStats();
+        
+        // Step 8: Retrieve message details (at the end to give system time to store data)
+        // Add a small delay to ensure message data is stored
+        console.log('\n⏳ Waiting a few seconds for message data to be stored...');
+        await new Promise(resolve => setTimeout(resolve, 3000)); // Wait 3 seconds
+        await this.getMessageDetails();
         
         console.log('\n╔═══════════════════════════════════════════════════════════════╗');
         console.log('║   Workflow Complete!                                          ║');
